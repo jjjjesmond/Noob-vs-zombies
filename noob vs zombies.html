@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOOB VS ZOMBIES 3.0</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap');
+        body { background:#0d0d11; color:#a3b8cc; display:flex; flex-direction:column; align-items:center; padding:15px; margin:0; font-family:'Share Tech Mono',monospace; }
+        * { box-sizing:border-box; }
+        .main-logo, .gold-counter, .t-font { font-family:'Press Start 2P',cursive; font-size:11px; }
+        .main-logo { color:#00ff66; }
+        .gold-counter { color:#f1c40f; }
+        .menu-bar { display:grid; grid-template-columns:repeat(5,1fr); gap:3px; width:100%; max-width:480px; margin:12px 0; }
+        .tab-trigger { background:#13131a; color:#52637a; border:1px solid #1c1c2b; padding:10px 0; font-size:7px; cursor:pointer; border-radius:4px; }
+        .active-tab { color:#00ff66; border:2px solid #00ff66; background:#161a1e; }
+        .content-panel { display:none; width:100%; max-width:480px; }
+        .visible { display:block; }
+        .btn-core { background:transparent; color:#00ff66; border:2px solid #00ff66; padding:12px; width:100%; cursor:pointer; border-radius:4px; }
+        .fighter-card { background:#13131a; border:1px solid #1f1f2e; padding:12px; border-radius:6px; margin-bottom:10px; }
+        .raid-arena { background:#3a0d0d!important; border:2px solid #e53e3e!important; }
+        .meter-back { background:#222; height:14px; border-radius:3px; overflow:hidden; border:1px solid #333; margin:6px 0; }
+        .meter-fill { height:100%; transition:width .15s linear; }
+        .btn-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:10px; }
+        .attack-node { background:#191924; border:1px solid #2d2d44; color:#fff; padding:8px; cursor:pointer; border-radius:4px; font-family:'Share Tech Mono'; font-size:12px; text-align:left; }
+        .attack-node:disabled { opacity:0.4; cursor:not-allowed; }
+        .terminal-feed { background:#07070a; border:1px solid #1f1f2e; height:95px; overflow-y:auto; font-size:11px; color:#00ff66; padding:8px; border-radius:4px; margin-top:8px; line-height:1.4; }
+        .list-row { background:#13131a; border:1px solid #1f1f2e; padding:12px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-radius:6px; }
+        .action-select { background:transparent; border:1px solid #00ff66; color:#00ff66; padding:6px 12px; cursor:pointer; border-radius:4px; font-family:'Share Tech Mono'; }
+        .action-select:disabled { color:#444; border-color:#333; cursor:not-allowed; }
+    </style>
+</head>
+<body>
+    <div style="display:flex;justify-content:space-between;width:100%;max-width:480px;border-bottom:2px solid #1f1f2e;padding-bottom:8px">
+        <div class="main-logo">⚔️ NOOB VS ZOMBIES 3.0</div>
+        <div style="text-align:right">
+            <span class="gold-counter">🪙 <span id="coin-ui">0</span></span><br>
+            <span style="color:#00d2d3;font-size:11px;font-family:'Press Start 2P'">💎 <span id="gem-ui">0</span></span>
+        </div>
+    </div>
+    <div class="menu-bar">
+        <button id="nav-play" class="tab-trigger active-tab" onclick="renderView('play')">PLAY</button>
+        <button id="nav-enemies" class="tab-trigger" onclick="renderView('enemies')">STAGE</button>
+        <button id="nav-specials" class="tab-trigger" onclick="renderView('specials')">SPECIAL</button>
+        <button id="nav-shop" class="tab-trigger" onclick="renderView('shop')">SHOP</button>
+        <button id="nav-lead" class="tab-trigger" onclick="renderView('lead')">LEADER</button>
+    </div>
+    <div id="panel-play" class="content-panel visible">
+        <div id="deck-setup">
+            <div class="fighter-card" style="text-align:center;padding:20px 15px">
+                <div id="lobby-hint" style="margin-bottom:12px;font-size:13px;color:#718294">Select a match below!</div>
+                <button class="btn-core t-font" onclick="beginMatchEngine('normal')">▶ NORMAL STAGE</button>
+                <button class="btn-core t-font" style="color:#ff4d4d;border-color:#ff4d4d;margin-top:8px" onclick="beginMatchEngine('raid')">🚨 ENTER RAID ZONE</button>
+            </div>
+        </div>
+        <div id="deck-arena" style="display:none">
+            <div id="arena-card-box" class="fighter-card">
+                <div style="display:flex;justify-content:space-between" class="t-font"><span id="p-name">Noob</span><span id="p-badge" style="color:#00ff66">HERO</span></div>
+                <div class="meter-back"><div id="p-bar" class="meter-fill" style="background:#00ff66;width:100%"></div></div>
+                <div style="display:flex;justify-content:space-between;font-size:13px"><span id="p-status" style="color:#ff9f43"></span><span id="p-text">HP: 100/100</span></div>
+                <div id="p-actions-container" class="btn-grid"></div>
+                <button id="exit-btn" class="action-select" style="width:100%;margin-top:10px;border-color:#ff4d4d;color:#ff4d4d;display:none" onclick="forceExitMatch()">🏳️ ESCAPE BATTLE</button>
+            </div>
+            <div class="fighter-card" id="enemy-card-box">
+                <div id="e-name" class="t-font" style="color:#e53e3e">Zombie</div>
+                <div class="meter-back"><div id="e-bar" class="meter-fill" style="background:#e53e3e;width:100%"></div></div>
+                <div id="e-text" style="text-align:right">HP: 100/100</div>
+            </div>
+            <div id="feed-log" class="terminal-feed">Standing by...</div>
+        </div>
+    </div>
+    <div id="panel-enemies" class="content-panel"><div id="enemies-list-container"></div></div>
+    <div id="panel-specials" class="content-panel"><div id="specials-list-container"></div></div>
+    <div id="panel-shop" class="content-panel">
+        <div id="shop-list-container"></div>
+        <div style="margin-top:10px;padding:10px;border:1px dashed #5b2c80;text-align:center;border-radius:6px">
+            <div class="t-font" style="color:#b042ff;margin-bottom:6px">ENTER CODE</div>
+            <input type="text" id="secret-gate-key" placeholder="Type here..." style="background:#09090d;border:1px solid #5b2c80;color:#d080ff;padding:6px;width:70%;text-align:center;outline:none;border-radius:4px;margin-bottom:6px"><br>
+            <button onclick="verifySecretCode()" class="action-select" style="border-color:#b042ff;color:#b042ff">SUBMIT</button>
+        </div>
+        <div id="admin-panel-ui" style="display:none;margin-top:10px;padding:10px;background:#111;border:2px solid #ff4d4d;border-radius:6px">
+            <div class="t-font" style="color:#ff4d4d;text-align:center;margin-bottom:6px">⚠️ ADMIN MATRIX TERMINAL</div>
+            <input type="text" id="admin-input" placeholder="/Add coin name count..." style="background:#000;border:1px solid #ff4d4d;color:#ff4d4d;padding:8px;width:100%;font-family:monospace;outline:none;margin-bottom:6px">
+            <button onclick="executeAdminCmd()" class="btn-core" style="color:#ff4d4d;border-color:#ff4d4d;padding:6px">RUN COMMAND</button>
+        </div>
+    </div>
+    <div id="panel-lead" class="content-panel">
+        <div class="fighter-card">
+            <div class="t-font" style="color:#f1c40f;margin-bottom:12px;text-align:center">🏆 LIVE GLOBAL LEADERBOARD</div>
+            <div style="margin-bottom:10px;display:flex;gap:5px">
+                <input type="text" id="player-username" placeholder="Register Name..." style="background:#191924;border:1px solid #2d2d44;color:#fff;padding:8px;flex:1;border-radius:4px">
+                <button onclick="updateLeaderboardName()" id="name-btn-lbl" class="action-select">SET NAME</button>
+            </div>
+            <div id="leaderboard-box">Loading server matrix...</div>
+        </div>
+    </div>
+<script>
+    const DB_URL="https://kvdb.io/MN8W8vK6u71ZpT6nK7rU7P/nz_scores_v3";
+    let wallet=0,gems=0,selectedCategory='normal',selectedEnemyIndex=0,engineLock=false,pDmgMod=1,pHyperChargeStack=0,tntCooldown=0,playerName="",hasRenamed=false,adminUnlocked=false,currentBattleMode='normal',bleedTicks=0,dbRegistry={};
+    
+    const heroRegistry=[
+        {idx:0,id:"noob",name:"Noob",maxHp:100,hp:100,dH:"100",cost:0,owned:true,moves:[{n:"Punch",d:15},{n:"Kick",d:35}]},
+        {idx:1,id:"large_noob",name:"Large Noob",maxHp:1000,hp:1000,dH:"1000",cost:500,owned:false,moves:[{n:"Punch",d:35},{n:"Stomp",d:50}]},
+        {idx:2,id:"titan_noob",name:"Titan Noob",maxHp:15000,hp:15000,dH:"15000",cost:10000,owned:false,moves:[{n:"Beam Shot",d:100},{n:"Laser Beam",d:250},{n:"Firecore",d:300}]},
+        {idx:3,id:"titan_noob_2",name:"Titan Noob 2.0",maxHp:75000,hp:75000,dH:"75k",cost:100000,owned:false,isTitanTwo:true,moves:[{n:"Hyper charge",d:0,isHyper:true},{n:"Laser shot",d:550},{n:"Laser gun",d:450},{n:"Explosive TNT",d:750,isTNT:true}]},
+        {idx:4,id:"jjjjesmond",name:"jjjjesmond",maxHp:500,hp:500,dH:"500 Nonillion",cost:0,owned:false,isGod:true,moves:[{n:"Punch",d:1},{n:"Memezzz",d:0}]}
+    ];
+    const normalZombies=[
+        {name:"Zombie",maxHp:100,reward:100,moves:[{n:"Bite",d:10}]},
+        {name:"Giant Zombie",maxHp:500,reward:1000,moves:[{n:"Pound",d:25},{n:"Stomp",d:45}]},
+        {name:"Titan Zombie",maxHp:10000,reward:20000,moves:[{n:"Slam",d:60},{n:"Laser Eye",d:120}]}
+    ];
+    const specialZombies=[
+        {name:"Upgraded Titan Zombie",maxHp:50000,reward:65000,moves:[{n:"Missile Barrage",d:400},{n:"Laser Sweep",d:800}]},
+        {name:"Rotten Zombie",maxHp:500,reward:10000,moves:[{n:"Infect Scratch",d:30}]},
+        {name:"Hacker Zombie",maxHp:1000000,reward:650000,moves:[{n:"/kill",d:999999},{n:"Glitch Stun",d:150}]}
+    ];
+    const raidZombies=[
+        {name:"Infected Noob",maxHp:1000,rewardGems:10,isInfNoob:true,moves:[{n:"Punch",d:50}]},
+        {name:"Infected Titan Noob",maxHp:35000,rewardGems:250,isInfTitan:true,moves:[{n:"Mega Slam",d:300},{n:"Corrupt Beam",d:600}]},
+        {name:"Upgraded Hacker Zombie",maxHp:2000000000000000,rewardGems:5000,isUpgHacker:true,moves:[{n:"/kill",d:1000000000000000},{n:"/stun",d:0},{n:"/boost",d:0}]}
+    ];
+    let usedCodes=[],activeHero=heroRegistry[0],currentEnemy=null;
+
+    function save(){localStorage.setItem('nz_v3_local',JSON.stringify({w:wallet,g:gems,owned:heroRegistry.filter(h=>h.owned).map(h=>h.id),cur:activeHero.id,pName:playerName,rn:hasRenamed,adm:adminUnlocked,uc:usedCodes}));pushToCloud()}
+    function load(){const s=JSON.parse(localStorage.getItem('nz_v3_local'));if(s){wallet=s.w||0;gems=s.g||0;playerName=s.pName||"";hasRenamed=s.rn||false;adminUnlocked=s.adm||false;usedCodes=s.uc||[];document.getElementById('coin-ui').innerText=wallet;document.getElementById('gem-ui').innerText=gems;document.getElementById('player-username').value=playerName;if(adminUnlocked)document.getElementById('admin-panel-ui').style.display="block";heroRegistry.forEach(h=>{if(s.owned.includes(h.id))h.owned=true});const m=heroRegistry.find(h=>h.id==s.cur);if(m&&m.owned)activeHero=m}document.getElementById('name-btn-lbl').innerText=playerName?(hasRenamed?"RENAME [50💎]":"RENAME [FREE]"):"SET NAME";updateLobbyText();fetchCloudBoard()}
+    async function pushToCloud(){if(!playerName)return;try{await fetch(`${DB_URL}/${playerName}`,{method:'PUT',body:JSON.stringify({coins:wallet,gems:gems})})}catch(e){}}
+    async function fetchCloudBoard(){try{let res=await fetch(`${DB_URL}?prefix=`);let keys=await res.json();dbRegistry={};let arr=[];for(let k of keys){let vRes=await fetch(`${DB_URL}/${k}`);let vData=await vRes.json();dbRegistry[k]=vData;arr.push({name:k,coins:vData.coins||0})}arr.sort((a,b)=>b.coins-a.coins);const box=document.getElementById('leaderboard-box');box.innerHTML="";arr.forEach((p,i)=>{box.innerHTML+=`<div style="display:flex;justify-content:space-between;padding:6px;background:${p.name==playerName?'#1a291e':'#191924'};margin-bottom:4px;border-radius:4px"><span>${i+1}. ${p.name}</span><span style="color:#f1c40f">🪙 ${p.coins.toLocaleString()}</span></div>`})}catch(e){document.getElementById('leaderboard-box').innerHTML="Offline Simulated Mode Active."}}
+    function renderView(v){document.querySelectorAll('.tab-trigger').forEach(e=>e.classList.remove('active-tab'));document.querySelectorAll('.content-panel').forEach(e=>e.classList.remove('visible'));document.getElementById('nav-'+v).classList.add('active-tab');document.getElementById('panel-'+v).classList.add('visible');if(v=='enemies')rebuildEnemies();if(v=='specials')rebuildSpecials();if(v=='shop')rebuildShop();if(v=='lead')fetchCloudBoard()}
+    async function updateLeaderboardName(){const val=document.getElementById('player-username').value.trim().replace(/[^a-zA-Z0-9-_]/g,"");if(!val){alert("Invalid name string.");return}if(val==playerName)return;if(dbRegistry[val]){alert("Matrix Conflict: This user ID is already claimed live!");return}if(playerName&&hasRenamed){if(gems<50){alert("Insufficient Gems! Requires 50 💎");return}gems-=50}if(playerName){try{await fetch(`${DB_URL}/${playerName}`,{method:'DELETE'})}catch(e){}}playerName=val;hasRenamed=true;save();load()}
+    function verifySecretCode(){const c=document.getElementById('secret-gate-key').value.trim();if(c=="Very secret admin panel"){adminUnlocked=true;document.getElementById('admin-panel-ui').style.display="block";alert("ADMIN CONSOLE CONNECTED.");save();return}if(usedCodes.includes(c)){alert("Key already activated.");return}let rewardMap={Alpha:500,Alpha2:250,Idkbruh:1000,Meme:2000,Memes:2500,Memez:-1};if(rewardMap[c]!==undefined){if(c=="Memez"){heroRegistry[4].owned=true;activeHero=heroRegistry[4];alert("Asset unlocked: jjjjesmond")}else{wallet+=rewardMap[c];alert(`Injected +🪙 ${rewardMap[c]}`)}usedCodes.push(c);save();load();document.getElementById('secret-gate-key').value=""}else{alert("Invalid code asset.")}}
+    async function executeAdminCmd(){const raw=document.getElementById('admin-input').value.trim();const args=raw.split(" ");const cmd=args[0];if(cmd=="/Reset"&&args[1]=="coin"){let t=args[2];if(t){await fetch(`${DB_URL}/${t}`,{method:'PUT',body:JSON.stringify({coins:0,gems:dbRegistry[t]?dbRegistry[t].gems:0})});if(t==playerName)wallet=0;alert("Coins wiped.")}}else if(cmd=="/Reset"&&args[1]=="name"){let t=args[2];if(t){await fetch(`${DB_URL}/${t}`,{method:'DELETE'});let g=dbRegistry[t]?dbRegistry[t].coins:0,gm=dbRegistry[t]?dbRegistry[t].gems:0;await fetch(`${DB_URL}/guest-${t}`,{method:'PUT',body:JSON.stringify({coins:g,gems:gm})});if(t==playerName)playerName="guest-"+t;alert("Identity wiped to proxy.")}}else if(cmd=="/Add"&&args[1]=="coin"){let t=args[2],amt=parseInt(args[3])||0;if(t){let curC=dbRegistry[t]?dbRegistry[t].coins:0,curG=dbRegistry[t]?dbRegistry[t].gems:0;await fetch(`${DB_URL}/${t}`,{method:'PUT',body:JSON.stringify({coins:curC+amt,gems:curG})});if(t==playerName)wallet+=amt;alert("Coins successfully injected.")}}else if(cmd=="/Change"&&args[1]=="name"){let t=args[2],nn=args[3];if(t&&nn){let data=dbRegistry[t]||{coins:0,gems:0};await fetch(`${DB_URL}/${t}`,{method:'DELETE'});await fetch(`${DB_URL}/${nn}`,{method:'PUT',body:JSON.stringify(data)});if(t==playerName)playerName=nn;alert("Server name updated.")}}document.getElementById('admin-input').value="";save();fetchCloudBoard()}
+    function updateLobbyText(){const pool=currentBattleMode=='normal'?(selectedCategory=='normal'?normalZombies:specialZombies):raidZombies;const z=pool[selectedEnemyIndex]||normalZombies[0];document.getElementById('lobby-hint').innerHTML=`Target: <strong style="color:#00ff66">${z.name}</strong><br><span style="font-size:12px;color:#6b7c96">${z.maxHp?`HP: ${z.maxHp.toLocaleString()}`:''}${z.reward?' | 🪙 '+z.reward:''}${z.rewardGems?' | 💎 '+z.rewardGems:''}</span>`}
+    function rebuildEnemies(){currentBattleMode='normal';selectedCategory='normal';const b=document.getElementById('enemies-list-container');b.innerHTML="";normalZombies.forEach((z,i)=>{b.innerHTML+=`<div class="list-row"><div><div style="color:#fff" class="t-font">${z.name}</div><div style="color:#6b7c96;font-size:12px">HP: ${z.maxHp}</div></div><button class="action-select" onclick="assignTarget('normal',${i},'normal')">SELECT</button></div>`})}
+    function rebuildSpecials(){currentBattleMode='normal';selectedCategory='special';const b=document.getElementById('specials-list-container');b.innerHTML="";specialZombies.forEach((z,i)=>{b.innerHTML+=`<div class="list-row" style="border-color:#9b59b6"><div><div style="color:#be2edd" class="t-font">${z.name}</div><div style="color:#6b7c96;font-size:12px">HP: ${z.maxHp}</div></div><button class="action-select" style="border-color:#9b59b6;color:#be2edd" onclick="assignTarget('special',${i},'normal')">SELECT</button></div>`})}
+    function assignTarget(cat,i,mode){selectedCategory=cat;selectedEnemyIndex=i;currentBattleMode=mode;document.getElementById('deck-arena').style.display="none";document.getElementById('deck-setup').style.display="block";updateLobbyText();renderView('play')}
+    function rebuildShop(){const b=document.getElementById('shop-list-container');b.innerHTML="";heroRegistry.forEach(h=>{if(h.id=="jjjjesmond"&&!h.owned)return;const eq=activeHero.id==h.id;let txt=h.owned?'EQUIP':`BUY [${h.cost} 🪙]`;b.innerHTML+=`<div class="list-row"><div><div class="t-font" style="color:${h.isGod?'#b042ff':h.isTitanTwo?'#3498db':'#fff'}">${h.name}</div><div style="color:#6b7c96;font-size:12px">Max HP: ${h.dH}</div></div><button class="action-select" ${eq||(!h.owned&&wallet<h.cost)?'disabled':''} onclick="equip(${h.idx})">${txt}</button></div>`})}
+    function equip(i){const t=heroRegistry[i];if(!t.owned&&wallet>=t.cost){wallet-=t.cost;t.owned=true}else if(t.owned){activeHero=t;document.getElementById('deck-arena').style.display="none";document.getElementById('deck-setup').style.display="block"}save();rebuildShop()}
+    function beginMatchEngine(preferredMode){if(preferredMode)currentBattleMode=preferredMode;document.getElementById('deck-setup').style.display="none";document.getElementById('deck-arena').style.display="block";const pool=currentBattleMode=='normal'?(selectedCategory=='normal'?normalZombies:specialZombies):raidZombies;const t=pool[selectedEnemyIndex]||pool[0];currentEnemy={...t,hp:t.maxHp};activeHero.hp=activeHero.maxHp;engineLock=false;pDmgMod=1;pHyperChargeStack=0;tntCooldown=0;bleedTicks=0;if(currentBattleMode=='raid'){document.getElementById('arena-card-box').classList.add('raid-arena');document.getElementById('enemy-card-box').classList.add('raid-arena');document.getElementById('exit-btn').style.display="block"}else{document.getElementById('arena-card-box').classList.remove('raid-arena');document.getElementById('enemy-card-box').classList.remove('raid-arena');document.getElementById('exit-btn').style.display="none"}document.getElementById('feed-log').innerHTML=`Arena Open vs ${currentEnemy.name}!`;refresh()}
+    function forceExitMatch(){document.getElementById('deck-arena').style.display="none";document.getElementById('deck-setup').style.display="block";updateLobbyText()}
+    function refresh(){document.getElementById('p-name').innerText=activeHero.name;document.getElementById('p-badge').innerText=activeHero.isGod?"GOD":activeHero.isTitanTwo?"TITAN 2.0":"HERO";document.getElementById('p-badge').style.color=activeHero.isGod?"#b042ff":activeHero.isTitanTwo?"#3498db":"#00ff66";document.getElementById('p-text').innerText=activeHero.isGod?`HP: ${activeHero.hp} Non/500 Non`:`HP: ${activeHero.hp}/${activeHero.maxHp}`;document.getElementById('p-bar').style.width=`${(activeHero.hp/activeHero.maxHp)*100}%`;document.getElementById('p-bar').style.background=activeHero.isGod?"#b042ff":activeHero.isTitanTwo?"#3498db":"#00ff66";document.getElementById('e-name').innerText=currentEnemy.name;document.getElementById('e-text').innerText=`HP: ${currentEnemy.hp.toLocaleString()}/${currentEnemy.maxHp.toLocaleString()}`;document.getElementById('e-bar').style.width=`${(currentEnemy.hp/currentEnemy.maxHp)*100}%`;const b=document.getElementById('p-actions-container');b.innerHTML="";activeHero.moves.forEach(m=>{let desc=m.d+' DMG',isBtnDisabled=engineLock;if(m.isTNT&&tntCooldown>0){desc=`CD: ${tntCooldown}T`;isBtnDisabled=true}if(m.isHyper)desc=`+25% Dmg (Next turn)`;if(activeHero.isGod)desc=m.n=='Punch'?'Insta Kill':'Buff';b.innerHTML+=`<button class="attack-node" ${isBtnDisabled?'disabled':''} onclick="turnProcess('${m.n}',${m.d},${m.isHyper||false},${m.isTNT||false})">⚡ <strong>${m.n}</strong><br><span style="color:#00ff66;font-size:10px">${desc}</span></button>`})}
+    function log(txt){const f=document.getElementById('feed-log');f.innerHTML+=`<br>${txt}`;f.scrollTop=f.scrollHeight}
+    function turnProcess(mName,d,isHyper,isTNT){if(engineLock)return;engineLock=true;if(tntCooldown>0&&!isTNT)tntCooldown--;if(bleedTicks>0){activeHero.hp-=10;log(`🩸 [BLEED] Lost 10 HP from viral infection!`);if(activeHero.hp<=0)activeHero.hp=0}if(isHyper){if(pHyperChargeStack>=1){log(`⚠️ "you have reached the cap of 100%"`);}else{pHyperChargeStack+=0.25;pDmgMod+=0.25;log(`🔥 [Hyper Charge] Energy output spiked +25%!`);}refresh();setTimeout(enemyTurn,800);return}if(isTNT)tntCooldown=3;let dmg=activeHero.isGod&&mName=="Punch"?currentEnemy.maxHp:Math.floor(d*pDmgMod);log(`[Hero] ${activeHero.name} uses ${mName} for ${dmg} DMG!`);currentEnemy.hp-=dmg;pDmgMod=1+pHyperChargeStack;if(currentEnemy.hp<=0){currentEnemy.hp=0;refresh();if(currentBattleMode=='raid'){log(`[Raid] Cleared! Earned 💎 ${currentEnemy.rewardGems}`);gems+=currentEnemy.rewardGems}else{log(`[Victory] Earned 🪙 ${currentEnemy.reward}`);wallet+=currentEnemy.reward}save();setTimeout(forceExitMatch,1500);return}refresh();setTimeout(enemyTurn,800)}
+    function enemyTurn(){if(activeHero.hp<=0||currentEnemy.hp<=0)return;if(currentEnemy.isUpgHacker){let r=Math.random();if(r<0.45){currentEnemy.hp+=50000000000000;log(`[Enemy] Hacker uses /boost regaining 500 Billion HP!`)}else if(r<0.75){log(`[Enemy] Hacker uses /stun! Stunned for 2 turns.`);setTimeout(enemyTurn,1000);return}else{if(Math.random()<0.85&&!activeHero.isGod){activeHero.hp=0;log(`[Enemy] Hacker executes master /kill protocol!`)}}}else{const move=currentEnemy.moves[Math.floor(Math.random()*currentEnemy.moves.length)];if(activeHero.isGod){log(`[Enemy] Attacks safely deflected by structural immunity.`);}else{let finalDmg=currentEnemy.isInfTitan?move.d*2:move.d;log(`[Enemy] ${currentEnemy.name} uses ${move.n} for ${finalDmg} DMG!`);activeHero.hp-=finalDmg;if(currentEnemy.isInfNoob){bleedTicks=99;activeHero.hp+=50;log(`🦠 [Infected Absorption] Gained 50 HP but virus injected!`)}if(currentEnemy.isInfTitan){activeHero.hp+=100;log(`🧬 [Raid Regeneration] Anomaly healed user +100 HP.`)}}}if(activeHero.hp<=0){activeHero.hp=0;refresh();log(`[Defeat] Critical damage. Transporting home...`);setTimeout(forceExitMatch,1800);return}engineLock=false;refresh()}
+    load();
+</script>
+</body>
+</html>
